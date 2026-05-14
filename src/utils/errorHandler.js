@@ -30,7 +30,7 @@ export const parseError = (error) => {
       case 400:
         errorInfo.type = ERROR_TYPES.VALIDATION;
         errorInfo.message = data.error || 'Validation failed';
-        errorInfo.issues = data.issues || [];
+        errorInfo.issues = data.details?.issues || data.issues || [];
         break;
 
       case 401:
