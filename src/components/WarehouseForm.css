@@ -62,7 +62,8 @@
 }
 
 .form-steps__item--complete,
-.form-steps__item--current {
+.form-steps__item--current,
+.form-steps__item--clickable {
   opacity: 1;
 }
 
@@ -82,18 +83,39 @@
 }
 
 .form-steps__badge {
+  appearance: none;
   position: relative;
   z-index: 1;
   width: 30px;
   height: 30px;
+  padding: 0;
   border-radius: 50%;
   border: 2px solid var(--border-primary);
   background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: inherit;
   font-weight: 800;
   font-size: 13px;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.form-steps__item--clickable .form-steps__badge {
+  cursor: pointer;
+}
+
+.form-steps__item--clickable .form-steps__badge:hover {
+  border-color: var(--border-strong);
+}
+
+.form-steps__item--todo:not(.form-steps__item--clickable) .form-steps__badge,
+.form-steps__item--current .form-steps__badge {
+  cursor: default;
+}
+
+.form-steps__badge:disabled {
+  opacity: 1;
 }
 
 .form-steps__item--current .form-steps__badge {

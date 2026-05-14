@@ -121,26 +121,37 @@ const toFormValues = (d) => {
 
 // ── Reusable UI (JSX + CSS, no component library) ─────────────────────────────
 
-const FormSteps = ({ steps, current, isMobile }) => (
+const FormSteps = ({ steps, current, isMobile, onStepClick, canNavigateToStep }) => (
   <div className="form-steps-wrap">
     <div className="form-steps" role="list" aria-label="Form steps">
-      {steps.map((s, i) => (
-        <div
-          key={s.title}
-          role="listitem"
-          className={
-            'form-steps__item'
-            + (i < current ? ' form-steps__item--complete' : '')
-            + (i === current ? ' form-steps__item--current' : '')
-            + (i > current ? ' form-steps__item--todo' : '')
-          }
-        >
-          <span className="form-steps__badge" aria-current={i === current ? 'step' : undefined}>
-            {i + 1}
-          </span>
-          {!isMobile && <span className="form-steps__title">{s.title}</span>}
-        </div>
-      ))}
+      {steps.map((s, i) => {
+        const canNavigate = i !== current && canNavigateToStep(i);
+        return (
+          <div
+            key={s.title}
+            role="listitem"
+            className={
+              'form-steps__item'
+              + (i < current ? ' form-steps__item--complete' : '')
+              + (i === current ? ' form-steps__item--current' : '')
+              + (i > current ? ' form-steps__item--todo' : '')
+              + (canNavigate ? ' form-steps__item--clickable' : '')
+            }
+          >
+            <button
+              type="button"
+              className="form-steps__badge"
+              aria-current={i === current ? 'step' : undefined}
+              aria-label={canNavigate ? `Go to ${s.title}` : s.title}
+              disabled={!canNavigate}
+              onClick={() => canNavigate && onStepClick(i)}
+            >
+              {i + 1}
+            </button>
+            {!isMobile && <span className="form-steps__title">{s.title}</span>}
+          </div>
+        );
+      })}
     </div>
     {isMobile && <p className="form-steps__mobile-title">{steps[current]?.title}</p>}
   </div>
@@ -338,7 +349,7 @@ const WarehouseForm = ({ visible, onCancel, onSubmit, initialData = null, loadin
 
   // ── Validation ──────────────────────────────────────────────────────────────
 
-  const validateStep = (stepIndex) => {
+  const getStepErrors = (stepIndex) => {
     const e = {};
     const fields = formSteps[stepIndex].fields;
     if (fields.includes('listing_type') && !values.listing_type) e.listing_type = 'Listing type is required';
@@ -357,6 +368,13 @@ const WarehouseForm = ({ visible, onCancel, onSubmit, initialData = null, loadin
     if (fields.includes('uploadedBy') && !values.uploadedBy?.trim()) e.uploadedBy = 'Uploaded by is required';
     if (fields.includes('compliances') && !values.compliances) e.compliances = 'Compliance info is required';
 
+    return e;
+  };
+
+  const validateStep = (stepIndex) => {
+    const e = getStepErrors(stepIndex);
+    const fields = formSteps[stepIndex].fields;
+
     setErrors(prev => {
       const newErrors = { ...prev };
       fields.forEach(f => delete newErrors[f]);
@@ -374,6 +392,14 @@ const WarehouseForm = ({ visible, onCancel, onSubmit, initialData = null, loadin
     return true;
   };
 
+  const canNavigateToStep = (stepIndex) => {
+    if (stepIndex < 0 || stepIndex >= formSteps.length) return false;
+    for (let i = 0; i < stepIndex; i += 1) {
+      if (Object.keys(getStepErrors(i)).length > 0) return false;
+    }
+    return true;
+  };
+
   const handleNext = (e) => {
     if (e && e.preventDefault) e.preventDefault();
     if (validateStep(currentStep)) {
@@ -384,6 +410,12 @@ const WarehouseForm = ({ visible, onCancel, onSubmit, initialData = null, loadin
 
   const handlePrev = () => {
     setCurrentStep(prev => prev - 1);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleStepClick = (stepIndex) => {
+    if (stepIndex === currentStep || !canNavigateToStep(stepIndex)) return;
+    setCurrentStep(stepIndex);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -564,7 +596,13 @@ const WarehouseForm = ({ visible, onCancel, onSubmit, initialData = null, loadin
               </button>
             </div>
           )}
-          <FormSteps steps={formSteps} current={currentStep} isMobile={m} />
+          <FormSteps
+            steps={formSteps}
+            current={currentStep}
+            isMobile={m}
+            onStepClick={handleStepClick}
+            canNavigateToStep={canNavigateToStep}
+          />
 
           {/* ── Owner Details ───────────────────────────────────── */}
           <div className={currentStep === 0 ? '' : 'step-hidden'}>
@@ -686,7 +724,7 @@ const WarehouseForm = ({ visible, onCancel, onSubmit, initialData = null, loadin
               </>)}
 
               <Field label="Google Location URL">
-                <TextInput mobile={m} value={values.googleLocation} onChange={set('googleLocation')} placeholder="Google Maps URL" type="url" />
+                <TextInput mobile={m} value={values.googleLocation} onChange={set('googleLocation')} placeholder="Google Maps URL" type="text" />
               </Field>
 
               {row(<>
