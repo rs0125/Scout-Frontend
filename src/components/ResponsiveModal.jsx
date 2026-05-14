@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useViewport } from '../hooks/useViewport';
 
@@ -77,10 +77,10 @@ const ResponsiveModal = ({
 
   // Calculate responsive dimensions
   const getResponsiveDimensions = () => {
-    let modalWidth = width;
-    let modalMaxWidth = maxWidth;
-    let modalHeight = height;
-    let modalMaxHeight = maxHeight;
+    let modalWidth;
+    let modalMaxWidth;
+    const modalHeight = height;
+    let modalMaxHeight;
 
     if (isMobile) {
       // Full width on mobile with safe margins

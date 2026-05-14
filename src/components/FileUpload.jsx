@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { warehouseService } from '../services/warehouseService';
 import { useErrorHandler } from '../hooks/useErrorHandler';
 import './FileUpload.css';
@@ -66,33 +66,30 @@ const EMPTY_MEDIA = { images: [], videos: [], docs: [] };
 /**
  * FileUpload — images, videos, documents (native input + custom CSS).
  */
+const normalizeMedia = (v) =>
+  v && typeof v === 'object'
+    ? { images: v.images || [], videos: v.videos || [], docs: v.docs || [] }
+    : EMPTY_MEDIA;
+
 const FileUpload = ({ value, onChange, onUploadingChange, uploadedBy, disabled = false, maxSize = 50 }) => {
   const [activeUploads, setActiveUploads] = useState(new Map());
-  const [media, setMedia] = useState(EMPTY_MEDIA);
   const inputRef = useRef(null);
   const { handleUploadError, showSuccessMessage, showErrorMessage } = useErrorHandler();
+
+  const media = normalizeMedia(value);
+  const valueRef = useRef(value);
+  useEffect(() => {
+    valueRef.current = value;
+  }, [value]);
 
   const uploading = activeUploads.size > 0;
   useEffect(() => {
     if (onUploadingChange) onUploadingChange(uploading);
   }, [uploading, onUploadingChange]);
 
-  useEffect(() => {
-    if (value && typeof value === 'object') {
-      setMedia({
-        images: value.images || [],
-        videos: value.videos || [],
-        docs: value.docs || [],
-      });
-    } else {
-      setMedia(EMPTY_MEDIA);
-    }
-  }, [value]);
-
-  const notify = useCallback((next) => {
-    setMedia(next);
+  const notify = (next) => {
     if (onChange) onChange(next);
-  }, [onChange]);
+  };
 
   const updateUpload = (id, patch) => {
     setActiveUploads(prev => {
@@ -161,11 +158,9 @@ const FileUpload = ({ value, onChange, onUploadingChange, uploadedBy, disabled =
 
     uploadFile(file, uploadId)
       .then((url) => {
-        setMedia(prev => {
-          const next = { ...prev, [category]: [...prev[category], url] };
-          if (onChange) onChange(next);
-          return next;
-        });
+        const current = normalizeMedia(valueRef.current);
+        const next = { ...current, [category]: [...current[category], url] };
+        if (onChange) onChange(next);
         showSuccessMessage('upload');
       })
       .catch((err) => {

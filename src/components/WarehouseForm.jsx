@@ -280,6 +280,7 @@ const WarehouseForm = ({ visible, onCancel, onSubmit, initialData = null, loadin
   // Anti-double-click protection for submit button
   useEffect(() => {
     if (currentStep === formSteps.length - 1) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSubmitReady(false);
       const t = setTimeout(() => setSubmitReady(true), 500);
       return () => clearTimeout(t);
@@ -294,6 +295,7 @@ const WarehouseForm = ({ visible, onCancel, onSubmit, initialData = null, loadin
       // Only restore a draft when this is a brand-new form (no initialData edit context).
       const draft = !initialData ? loadDraft() : null;
       if (draft) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setValues({ ...INITIAL_VALUES, ...draft.values });
         setCurrentStep(Number.isInteger(draft.currentStep) ? draft.currentStep : 0);
         setDraftRestored(true);
@@ -321,6 +323,7 @@ const WarehouseForm = ({ visible, onCancel, onSubmit, initialData = null, loadin
     if (visible && !contactTouched && initialData && initialSnapshot &&
       initialData.id === initialSnapshot.id &&
       initialData.contactNumber !== initialSnapshot.contactNumber) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setValues(prev => ({ ...prev, contactNumber: initialData.contactNumber || prev.contactNumber }));
       setInitialSnapshot(initialData);
     }

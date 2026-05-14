@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import WarehouseForm from './components/WarehouseForm';
 import { warehouseService } from './services/warehouseService';
 import { handleOperationError, showSuccessMessage } from './utils/errorHandler';
@@ -6,7 +6,7 @@ import './index.css';
 
 function App() {
   const [loading, setLoading] = useState(false);
-  const [formKey, setFormKey] = useState(Date.now());
+  const [formKey, setFormKey] = useState(() => Date.now());
 
   const handleSubmit = async (payload) => {
     setLoading(true);
