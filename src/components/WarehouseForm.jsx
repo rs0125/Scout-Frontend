@@ -361,8 +361,12 @@ const WarehouseForm = ({ visible, onCancel, onSubmit, initialData = null, loadin
     if (fields.includes('contactPerson') && !values.contactPerson?.trim()) e.contactPerson = 'Contact person is required';
     if (fields.includes('contactNumber') && !values.contactNumber?.trim()) e.contactNumber = 'Contact number is required';
     if (fields.includes('totalSpaceSqft')) {
-      const spaces = (values.totalSpaceSqft || []).filter(v => v != null && v > 0);
-      if (spaces.length === 0) e.totalSpaceSqft = 'At least one space value is required';
+      const spaces = (values.totalSpaceSqft || []).filter(v => v != null && v !== '' && v > 0);
+      if (spaces.length === 0) {
+        e.totalSpaceSqft = 'At least one space value is required';
+      } else if (spaces.some(v => !Number.isInteger(Number(v)))) {
+        e.totalSpaceSqft = 'Space values must be whole numbers (no decimals)';
+      }
     }
     if (fields.includes('ratePerSqft') && !values.ratePerSqft && values.ratePerSqft !== 0) e.ratePerSqft = 'Rate per sq ft is required';
     if (fields.includes('uploadedBy') && !values.uploadedBy?.trim()) e.uploadedBy = 'Uploaded by is required';
@@ -460,7 +464,7 @@ const WarehouseForm = ({ visible, onCancel, onSubmit, initialData = null, loadin
         clearHeightFt: values.clearHeightFt ? String(values.clearHeightFt) : null,
         compliances: values.compliances,
         otherSpecifications: values.otherSpecifications || null,
-        ratePerSqft: values.ratePerSqft ? String(values.ratePerSqft) : null,
+        ratePerSqft: values.ratePerSqft !== '' && values.ratePerSqft != null ? String(values.ratePerSqft) : null,
         availability: values.availability || null,
         uploadedBy: values.uploadedBy,
         isBroker: values.isBroker || null,
@@ -791,6 +795,7 @@ const WarehouseForm = ({ visible, onCancel, onSubmit, initialData = null, loadin
                           onChange={e => setSpace(i, e.target.value)}
                           placeholder="Enter space"
                           min={1}
+                          step={1}
                           data-field="totalSpaceSqft"
                         />
                         {values.totalSpaceSqft.length > 1 && (
