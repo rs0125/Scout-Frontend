@@ -439,6 +439,27 @@ textarea.form-input {
   margin-top: 24px;
   border-top: 2px solid var(--border-primary);
   background: linear-gradient(to top, var(--bg-page) 70%, transparent);
+  transition: opacity 0.15s ease-out, transform 0.15s ease-out;
+}
+
+/* Hide the sticky mobile action bar while a text field is focused so the
+   virtual keyboard doesn't pin it on top of the input being edited. */
+.warehouse-form-modal.is-mobile
+  .warehouse-form-inner:has(
+    input:focus,
+    textarea:focus,
+    select:focus,
+    [contenteditable="true"]:focus
+  )
+  .form-actions--stack {
+  opacity: 0;
+  transform: translateY(100%);
+  pointer-events: none;
+}
+
+.warehouse-form-modal.is-mobile .form-input {
+  scroll-margin-top: 16px;
+  scroll-margin-bottom: 16px;
 }
 
 .form-btn {
