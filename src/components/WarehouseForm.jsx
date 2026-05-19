@@ -287,6 +287,26 @@ const WarehouseForm = ({ visible, onCancel, onSubmit, initialData = null, loadin
   const [draftRestored, setDraftRestored] = useState(false);
   const [mediaUploading, setMediaUploading] = useState(false);
   const [submitReady, setSubmitReady] = useState(false);
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
+
+  // Detect virtual keyboard via visualViewport so the sticky action bar can
+  // hide only while the keyboard is actually up — not just while an input is
+  // focused (Android back-button dismiss leaves focus but closes the keyboard).
+  useEffect(() => {
+    if (!isMobile || typeof window === 'undefined' || !window.visualViewport) return;
+    const vv = window.visualViewport;
+    const update = () => {
+      const occluded = window.innerHeight - vv.height;
+      setKeyboardOpen(occluded > 150);
+    };
+    vv.addEventListener('resize', update);
+    vv.addEventListener('scroll', update);
+    update();
+    return () => {
+      vv.removeEventListener('resize', update);
+      vv.removeEventListener('scroll', update);
+    };
+  }, [isMobile]);
 
   // Anti-double-click protection for submit button
   useEffect(() => {
@@ -576,7 +596,7 @@ const WarehouseForm = ({ visible, onCancel, onSubmit, initialData = null, loadin
   if (!visible) return null;
 
   return (
-    <div className={`warehouse-form-modal${m ? ' is-mobile' : ''}`}>
+    <div className={`warehouse-form-modal${m ? ' is-mobile' : ''}${keyboardOpen ? ' has-virtual-keyboard' : ''}`}>
       <div className={`warehouse-form-shell${loading || submitting ? ' is-busy' : ''}`}>
         {(loading || submitting) && (
           <div className="warehouse-form-overlay" aria-live="polite" aria-busy="true">
