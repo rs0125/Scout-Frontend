@@ -10,7 +10,7 @@ import { getMediaFromWarehouse } from '../utils/mediaUtils';
 const ZONES = ['North', 'South', 'East', 'West', 'Central'];
 const LAND_TYPES = ['Warehouse CLU', 'Commercial CLU', 'Industrial CLU', 'Others'];
 const POLLUTION_ZONES = ['Green', 'Yellow', 'Red'];
-const OWNER_TYPES = ['Individual', 'Company', '3PL', 'Multiple owners'];
+const OWNER_TYPES = ['Individual', 'Company', '3PL'];
 const OWNER_WARMTH_OPTIONS = ['Green', 'Yellow', 'Red'];
 const WAREHOUSE_TYPES = ['PEB', 'RCC', 'Shed', 'BTS'];
 const formSteps = [
@@ -162,6 +162,40 @@ const FormSteps = ({ steps, current, isMobile, onStepClick, canNavigateToStep })
     {isMobile && <p className="form-steps__mobile-title">{steps[current]?.title}</p>}
   </div>
 );
+
+// Scroll to a form field, walking up to the nearest scrollable ancestor and
+// computing the offset manually. Falls back to window scroll when the field
+// lives in the document scroll context. Accepts a single field name or an
+// array — when given an array, picks the field whose DOM element appears
+// topmost in the document.
+const scrollFieldIntoView = (fieldNameOrList) => {
+  const names = Array.isArray(fieldNameOrList) ? fieldNameOrList : [fieldNameOrList];
+  let el = null;
+  let topY = Infinity;
+  for (const name of names) {
+    if (!name) continue;
+    const candidate = document.querySelector(`[data-field="${name}"]`);
+    if (!candidate) continue;
+    const y = candidate.getBoundingClientRect().top;
+    if (y < topY) { topY = y; el = candidate; }
+  }
+  if (!el) return;
+  let container = el.parentElement;
+  while (container && container !== document.body) {
+    const style = window.getComputedStyle(container);
+    if (/(auto|scroll)/.test(style.overflowY) && container.scrollHeight > container.clientHeight) break;
+    container = container.parentElement;
+  }
+  if (container && container !== document.body) {
+    const containerRect = container.getBoundingClientRect();
+    const elRect = el.getBoundingClientRect();
+    const top = elRect.top - containerRect.top + container.scrollTop - (container.clientHeight / 2) + (elRect.height / 2);
+    container.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+  } else {
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  if (typeof el.focus === 'function') el.focus({ preventScroll: true });
+};
 
 const FormSpinner = ({ tip, large }) => (
   <div className={large ? 'form-spinner form-spinner--lg' : 'form-spinner'}>
@@ -426,11 +460,8 @@ const WarehouseForm = ({ visible, onCancel, onSubmit, initialData = null, loadin
     });
 
     if (Object.keys(e).length > 0) {
-      const firstKey = Object.keys(e)[0];
-      setTimeout(() => {
-        const el = document.querySelector(`[data-field="${firstKey}"]`);
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 50);
+      const missingKeys = Object.keys(e);
+      setTimeout(() => scrollFieldIntoView(missingKeys), 50);
       return false;
     }
     return true;
@@ -820,26 +851,28 @@ const WarehouseForm = ({ visible, onCancel, onSubmit, initialData = null, loadin
           {/* ── Warehouse Technical Specifications ──────────────── */}
           <div className={currentStep === 2 ? '' : 'step-hidden'}>
             <Section title="Warehouse Technical Specifications">
-              {row(<>
-                {col(
+              {row(
+                col(
                   <Field label="Warehouse Type" required error={errors.warehouseType} tooltip="Please mention PEB / RCC / Shed. Use 'Shed' for old-style godowns.">
                     <SelectInput mobile={m} value={values.warehouseType} onChange={set('warehouseType')} placeholder="Select warehouse type" options={WAREHOUSE_TYPES} data-field="warehouseType" />
                   </Field>,
-                  true)}
+                  true)
+              )}
+
+              {row(<>
                 {col(
                   /* NOTE: 'totalSpaceSqft' from the schema is displayed as "Offered Area" here per user request */
                   <Field label="Offered Area (sq ft)" required error={errors.totalSpaceSqft} tooltip="Please mention all kinds of areas offered, including partition possibilities.">
                     {(values.totalSpaceSqft || []).map((v, i) => (
                       <div key={i} className="form-inline-row">
                         <input
-                          type="number"
+                          type="text"
                           className="form-input"
                           inputMode="numeric"
+                          pattern="[0-9]*"
                           value={v ?? ''}
-                          onChange={e => setSpace(i, e.target.value)}
+                          onChange={e => setSpace(i, e.target.value.replace(/[^0-9]/g, ''))}
                           placeholder="Enter space"
-                          min={1}
-                          step={1}
                           data-field="totalSpaceSqft"
                         />
                         {values.totalSpaceSqft.length > 1 && (
@@ -859,6 +892,11 @@ const WarehouseForm = ({ visible, onCancel, onSubmit, initialData = null, loadin
                     </button>
                   </Field>,
                   true)}
+                {col(
+                  <Field label="Chargeable Area (sq ft)" error={errors.chargeableArea} tooltip="The billable area used to compute rent.">
+                    <TextInput mobile={m} value={values.chargeableArea} onChange={v => set('chargeableArea')(String(v).replace(/[^0-9]/g, ''))} placeholder="Chargeable area" type="text" inputMode="numeric" pattern="[0-9]*" data-field="chargeableArea" />
+                  </Field>,
+                  true)}
               </>)}
 
               {row(<>
@@ -874,18 +912,13 @@ const WarehouseForm = ({ visible, onCancel, onSubmit, initialData = null, loadin
                   true)}
               </>)}
 
-              {row(<>
-                {col(
+              {row(
+                col(
                   <Field label="Carpet Area" tooltip="Please mention the entire carpet area.">
                     <TextInput mobile={m} value={values.carpet_area} onChange={set('carpet_area')} placeholder="Carpet area" />
                   </Field>,
-                  true)}
-                {col(
-                  <Field label="Chargeable Area (sq ft)" error={errors.chargeableArea} tooltip="The billable area used to compute rent.">
-                    <TextInput mobile={m} value={values.chargeableArea} onChange={set('chargeableArea')} placeholder="Chargeable area" type="number" inputMode="numeric" data-field="chargeableArea" />
-                  </Field>,
-                  true)}
-              </>)}
+                  true)
+              )}
 
               {row(<>
                 {col(

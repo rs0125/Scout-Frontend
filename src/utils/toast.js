@@ -6,7 +6,7 @@ let container = null;
 
 function ensureContainer() {
   if (typeof document === 'undefined') return null;
-  if (!container) {
+  if (!container || !container.isConnected) {
     container = document.createElement('div');
     container.id = 'app-toast-root';
     container.className = 'toast-stack';
