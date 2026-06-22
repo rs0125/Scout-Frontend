@@ -231,6 +231,14 @@
   font-weight: 600;
 }
 
+/* Soft, non-blocking validation hint (e.g. odd-looking phone numbers) */
+.form-warning {
+  color: #b45309;
+  font-size: 13px;
+  margin-top: 6px;
+  font-weight: 500;
+}
+
 /* Help tooltip */
 .form-help {
   position: relative;

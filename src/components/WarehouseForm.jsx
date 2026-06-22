@@ -4,6 +4,7 @@ import './WarehouseForm.css';
 import { clearErrors } from '../utils/errorHandler';
 import { useViewport } from '../hooks/useViewport';
 import { getMediaFromWarehouse } from '../utils/mediaUtils';
+import { looksLikePhone } from '../utils/phone';
 
 // ── Tiny helpers ──────────────────────────────────────────────────────────────
 
@@ -14,7 +15,7 @@ const OWNER_TYPES = ['Individual', 'Company', '3PL'];
 const OWNER_WARMTH_OPTIONS = ['Green', 'Yellow', 'Red'];
 const WAREHOUSE_TYPES = ['PEB', 'RCC', 'Shed', 'BTS'];
 const formSteps = [
-  { title: 'Owner Details', fields: ['listing_type', 'contactPerson', 'contactNumber', 'uploadedBy'] },
+  { title: 'Owner Details', fields: ['listing_type', 'contactPerson', 'contactNumber', 'alt_phone_number', 'uploadedBy'] },
   { title: 'Location Details', fields: ['address', 'city', 'state', 'zone'] },
   { title: 'Technical Specs', fields: ['warehouseType', 'totalSpaceSqft', 'chargeableArea'] },
   { title: 'Compliances', fields: ['compliances'] },
@@ -211,7 +212,7 @@ const HelpTip = ({ text }) => (
   </span>
 );
 
-const Field = ({ label, required, error, children, style, tooltip }) => (
+const Field = ({ label, required, error, warning, children, style, tooltip }) => (
   <div className="form-field" style={style}>
     {label && (
       <label className="form-label">
@@ -222,6 +223,7 @@ const Field = ({ label, required, error, children, style, tooltip }) => (
     )}
     {children}
     {error && <div className="form-error">{error}</div>}
+    {!error && warning && <div className="form-warning">{warning}</div>}
   </div>
 );
 
@@ -426,7 +428,14 @@ const WarehouseForm = ({ visible, onCancel, onSubmit, initialData = null, loadin
     if (fields.includes('city') && !values.city?.trim()) e.city = 'City is required';
     if (fields.includes('state') && !values.state?.trim()) e.state = 'State is required';
     if (fields.includes('contactPerson') && !values.contactPerson?.trim()) e.contactPerson = 'Contact person is required';
-    if (fields.includes('contactNumber') && !values.contactNumber?.trim()) e.contactNumber = 'Contact number is required';
+    if (fields.includes('contactNumber')) {
+      if (!values.contactNumber?.trim()) e.contactNumber = 'Contact number is required';
+      else if (!looksLikePhone(values.contactNumber)) e.contactNumber = 'Enter a valid phone number (10-digit mobile, landline or +91 format)';
+    }
+    // Alternate phone is optional, but if provided it must look like a phone number.
+    if (fields.includes('alt_phone_number') && values.alt_phone_number?.trim() && !looksLikePhone(values.alt_phone_number)) {
+      e.alt_phone_number = 'Enter a valid phone number (10-digit mobile, landline or +91 format)';
+    }
     if (fields.includes('totalSpaceSqft')) {
       const spaces = (values.totalSpaceSqft || []).filter(v => v != null && v !== '' && v > 0);
       if (spaces.length === 0) {
@@ -720,7 +729,8 @@ const WarehouseForm = ({ visible, onCancel, onSubmit, initialData = null, loadin
                   </Field>,
                   true)}
                 {col(
-                  <Field label="Contact Number" required error={errors.contactNumber}>
+                  <Field label="Contact Number" required error={errors.contactNumber}
+                    warning={!looksLikePhone(values.contactNumber) ? "This doesn't look like a valid phone number. Use a 10-digit mobile, landline or +91 format." : null}>
                     <TextInput mobile={m} value={values.contactNumber} onChange={set('contactNumber')} placeholder="10-digit phone number" type="tel" inputMode="tel" maxLength={15} autoComplete="tel" data-field="contactNumber" />
                   </Field>,
                   true)}
@@ -728,8 +738,9 @@ const WarehouseForm = ({ visible, onCancel, onSubmit, initialData = null, loadin
 
               {row(<>
                 {col(
-                  <Field label="Alternate Phone Number">
-                    <TextInput mobile={m} value={values.alt_phone_number} onChange={set('alt_phone_number')} placeholder="Alternate phone" type="tel" inputMode="tel" maxLength={15} />
+                  <Field label="Alternate Phone Number" error={errors.alt_phone_number}
+                    warning={!looksLikePhone(values.alt_phone_number) ? "This doesn't look like a valid phone number. Use a 10-digit mobile, landline or +91 format." : null}>
+                    <TextInput mobile={m} value={values.alt_phone_number} onChange={set('alt_phone_number')} placeholder="Alternate phone" type="tel" inputMode="tel" maxLength={15} data-field="alt_phone_number" />
                   </Field>,
                   true)}
                 {col(

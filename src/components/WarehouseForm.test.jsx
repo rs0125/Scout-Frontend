@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { act, render, screen, waitFor, within } from '@testing-library/react';
+import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 // Block real network from FileUpload's service calls in case the user ever
@@ -61,6 +61,42 @@ describe('WarehouseForm — navigation', () => {
     const user = userEvent.setup();
     render(<WarehouseForm visible={true} onSubmit={vi.fn()} onCancel={vi.fn()} />);
     await fillStep0(user);
+    await user.click(screen.getByRole('button', { name: /^next$/i }));
+    expect(screen.getByRole('heading', { name: 'Location Details' })).toBeInTheDocument();
+  });
+
+  it('NAV-6: blocks Next when the contact number is malformed', async () => {
+    const user = userEvent.setup();
+    render(<WarehouseForm visible={true} onSubmit={vi.fn()} onCancel={vi.fn()} />);
+    await fillStep0(user, { contactNumber: 'abc123' });
+    await user.click(screen.getByRole('button', { name: /^next$/i }));
+    // Still on Step 0, with a blocking error
+    expect(screen.getByRole('heading', { name: 'Owner Details' })).toBeInTheDocument();
+    expect(screen.getByText(/Enter a valid phone number/i)).toBeInTheDocument();
+  });
+
+  it('NAV-7: advances when contact number uses a +91 / whitespace format', async () => {
+    const user = userEvent.setup();
+    render(<WarehouseForm visible={true} onSubmit={vi.fn()} onCancel={vi.fn()} />);
+    await fillStep0(user, { contactNumber: '+91 98765 43210' });
+    await user.click(screen.getByRole('button', { name: /^next$/i }));
+    expect(screen.getByRole('heading', { name: 'Location Details' })).toBeInTheDocument();
+  });
+
+  it('NAV-8: blocks Next when a non-empty alternate phone is malformed', async () => {
+    const user = userEvent.setup();
+    render(<WarehouseForm visible={true} onSubmit={vi.fn()} onCancel={vi.fn()} />);
+    await fillStep0(user);
+    await user.type(document.querySelector('[data-field="alt_phone_number"]'), 'not-a-number');
+    await user.click(screen.getByRole('button', { name: /^next$/i }));
+    expect(screen.getByRole('heading', { name: 'Owner Details' })).toBeInTheDocument();
+  });
+
+  it('NAV-9: advances when the optional alternate phone is left blank', async () => {
+    const user = userEvent.setup();
+    render(<WarehouseForm visible={true} onSubmit={vi.fn()} onCancel={vi.fn()} />);
+    await fillStep0(user);
+    // alt_phone_number untouched
     await user.click(screen.getByRole('button', { name: /^next$/i }));
     expect(screen.getByRole('heading', { name: 'Location Details' })).toBeInTheDocument();
   });
