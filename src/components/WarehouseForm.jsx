@@ -8,7 +8,6 @@ import { looksLikePhone } from '../utils/phone';
 
 // ── Tiny helpers ──────────────────────────────────────────────────────────────
 
-const ZONES = ['North', 'South', 'East', 'West', 'Central'];
 const LAND_TYPES = ['Warehouse CLU', 'Commercial CLU', 'Industrial CLU', 'Others'];
 const POLLUTION_ZONES = ['Green', 'Yellow', 'Red'];
 const OWNER_TYPES = ['Individual', 'Company', '3PL'];
@@ -16,7 +15,7 @@ const OWNER_WARMTH_OPTIONS = ['Green', 'Yellow', 'Red'];
 const WAREHOUSE_TYPES = ['PEB', 'RCC', 'Shed', 'BTS'];
 const formSteps = [
   { title: 'Owner Details', fields: ['listing_type', 'contactPerson', 'contactNumber', 'alt_phone_number', 'uploadedBy'] },
-  { title: 'Location Details', fields: ['address', 'city', 'state', 'zone'] },
+  { title: 'Location Details', fields: ['address', 'city', 'state'] },
   { title: 'Technical Specs', fields: ['warehouseType', 'totalSpaceSqft', 'chargeableArea'] },
   { title: 'Compliances', fields: ['compliances'] },
   { title: 'Commercials', fields: ['ratePerSqft'] },
@@ -24,7 +23,7 @@ const formSteps = [
 ];
 
 const INITIAL_VALUES = {
-  warehouseOwnerType: '', warehouseType: '', zone: '', address: '',
+  warehouseOwnerType: '', warehouseType: '', address: '',
   city: '', state: '', postalCode: '', googleLocation: '',
   contactPerson: '', contactNumber: '',
   totalSpaceSqft: [1000], ratePerSqft: '', offeredSpaceSqft: '', numberOfDocks: '',
@@ -58,7 +57,6 @@ const toFormValues = (d) => {
   return {
     warehouseOwnerType: d.warehouseOwnerType || '',
     warehouseType: d.warehouseType || '',
-    zone: d.zone || '',
     address: d.address || '',
     city: d.city || '',
     state: d.state || '',
@@ -423,7 +421,6 @@ const WarehouseForm = ({ visible, onCancel, onSubmit, initialData = null, loadin
     const fields = formSteps[stepIndex].fields;
     if (fields.includes('listing_type') && !values.listing_type) e.listing_type = 'Listing type is required';
     if (fields.includes('warehouseType') && !values.warehouseType?.trim()) e.warehouseType = 'Warehouse type is required';
-    if (fields.includes('zone') && !values.zone) e.zone = 'Zone is required';
     if (fields.includes('address') && !values.address?.trim()) e.address = 'Address is required';
     if (fields.includes('city') && !values.city?.trim()) e.city = 'City is required';
     if (fields.includes('state') && !values.state?.trim()) e.state = 'State is required';
@@ -535,7 +532,6 @@ const WarehouseForm = ({ visible, onCancel, onSubmit, initialData = null, loadin
         city: values.city,
         state: values.state,
         postalCode: values.postalCode || null,
-        zone: values.zone,
         contactPerson: values.contactPerson,
         contactNumber: values.contactNumber,
         totalSpaceSqft: (values.totalSpaceSqft || []).filter(v => v != null && v > 0),
@@ -810,11 +806,6 @@ const WarehouseForm = ({ visible, onCancel, onSubmit, initialData = null, loadin
                 {col(
                   <Field label="Postal Code">
                     <TextInput mobile={m} value={values.postalCode} onChange={set('postalCode')} placeholder="Postal code" inputMode="numeric" autoComplete="postal-code" />
-                  </Field>,
-                  true)}
-                {col(
-                  <Field label="Zone" required error={errors.zone}>
-                    <SelectInput mobile={m} value={values.zone} onChange={set('zone')} placeholder="Select zone" options={ZONES} data-field="zone" />
                   </Field>,
                   true)}
               </>)}
