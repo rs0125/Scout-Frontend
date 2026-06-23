@@ -47,7 +47,7 @@ const INDIA_STATE_CITIES = {
   'Andaman and Nicobar Islands': ['Port Blair', 'Diglipur', 'Rangat', 'Mayabunder', 'Car Nicobar'],
   'Chandigarh': ['Chandigarh'],
   'Dadra and Nagar Haveli and Daman and Diu': ['Daman', 'Diu', 'Silvassa', 'Amli'],
-  'Delhi': ['New Delhi', 'Dwarka', 'Rohini', 'Saket', 'Janakpuri', 'Lajpat Nagar', 'Narela', 'Badarpur', 'Okhla', 'Mundka', 'Patparganj', 'Mayur Vihar', 'Shahdara', 'Preet Vihar', 'Vasant Kunj', 'Connaught Place'],
+  'Delhi': ['Delhi', 'New Delhi'],
   'Jammu and Kashmir': ['Srinagar', 'Jammu', 'Anantnag', 'Baramulla', 'Sopore', 'Kathua', 'Udhampur', 'Poonch', 'Rajouri', 'Kupwara'],
   'Ladakh': ['Leh', 'Kargil'],
   'Lakshadweep': ['Kavaratti', 'Agatti', 'Minicoy', 'Andrott'],
@@ -520,7 +520,8 @@ const WarehouseForm = ({ visible, onCancel, onSubmit, initialData = null, loadin
   };
 
   const setStateField = (val) => {
-    setValues(prev => ({ ...prev, state: val, city: '' }));
+    const autoCity = val === 'Delhi' ? 'New Delhi' : '';
+    setValues(prev => ({ ...prev, state: val, city: autoCity }));
     setErrors(prev => ({ ...prev, state: null, city: null }));
   };
 
