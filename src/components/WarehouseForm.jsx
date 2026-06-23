@@ -520,7 +520,7 @@ const WarehouseForm = ({ visible, onCancel, onSubmit, initialData = null, loadin
   };
 
   const setStateField = (val) => {
-    const autoCity = val === 'Delhi' ? 'New Delhi' : '';
+    const autoCity = val === 'Delhi' ? 'New Delhi' : val === 'Chandigarh' ? 'Chandigarh' : '';
     setValues(prev => ({ ...prev, state: val, city: autoCity }));
     setErrors(prev => ({ ...prev, state: null, city: null }));
   };
